@@ -33,7 +33,7 @@
  * you need to implement scheduler simlator test code.
  *
  */
-PROCESS process_list[SIZE]={{0,'A',0,4},{1,'B',2,2},{2,'C',4,6},{3,'D',6,3},{4,'E',8,5}};
+PROCESS process_list[SIZE]={{0,'A',0,3},{1,'B',2,6},{2,'C',4,4},{3,'D',6,5},{4,'E',8,2}};
 int process_arrive_time[20]={0,-1,1,-1,2,-1,3,-1,4,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 //Queue Q={-1,4,0,arr};
 
