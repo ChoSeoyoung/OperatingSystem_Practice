@@ -47,8 +47,8 @@ typedef struct q_node {
 	struct q_node *next;
 	struct q_node *prev;
 	int data;
-	pthread_mutex_t frontLock;
-	pthread_mutex_t rearLock;
+	pthread_mutex_t nextLock;
+	pthread_mutex_t prevLock;
 } queue_node;
 
 queue_node *front;
@@ -57,10 +57,10 @@ queue_node *rear;
 typedef struct hash_list {
 	struct hash_list *next;
 	struct q_node *q_loc;
-	pthread_mutex_t lock;
 } hlist_node;
 
 hlist_node *hashlist[HASH_SIZE];
+pthread_mutex_t mutex_lock;
 
 /* Lab2 Hash and Queue init functions */
 void init_queue();
