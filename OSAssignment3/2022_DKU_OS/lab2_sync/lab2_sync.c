@@ -38,12 +38,8 @@
  */
 void init_queue() {
 	// You need to implement init_queue function.
-	front = (queue_node*)malloc(sizeof(queue_node));
-	rear = (queue_node*)malloc(sizeof(queue_node));
-	front->next = rear;
-	rear->next = rear;
-	pthread_mutex_init(&front->frontLock,NULL);
-	pthread_mutex_init(&rear->rearLock,NULL);
+	//pthread_mutex_init(&front->frontLock,NULL);
+	//pthread_mutex_init(&rear->rearLock,NULL);
 }
 
 /*
@@ -54,17 +50,12 @@ void init_queue() {
  */
 void enqueue(queue_node *new_node) {
 	// You need to implement enqueue function.
-	//https://hellmath.tistory.com/41
-	if (front->next == rear) {
-		front->next = new_node;
-		new_node->next = rear;
-		rear->next = new_node;
+	if (rear == NULL) { //큐가 비어있을 때
+		front = new_node;
+	}else {
+		new_node->prev = rear->prev;
 	}
-	else {
-		rear->next->next = new_node;
-		new_node->next = rear;
-		rear->next = new_node;
-	}
+	rear = new_node;
 }
 
 /*
@@ -123,12 +114,12 @@ void enqueue_fg(queue_node *new_node) {
  */
 void dequeue(queue_node *del_node) {
 	// You need to implement dequeue function.
-	if (front->next == rear) {
+	if (front == NULL) {
 		printf("Queue is empty!");
 	}
-	else{
-		del_node = front->next;
-		front->next = del_node;
+	else {
+		del_node->data = front->data;
+		front = front->next;
 	}
 }
 
@@ -177,10 +168,7 @@ void dequeue_fg(queue_node *del_node) {
 void init_hlist_node() {
 	// You need to implement init_hlist_node function.
 	for (int i = 0; i < HASH_SIZE; i++){
-		hashlist[i]=(hlist_node *)malloc(sizeof(hlist_node));
-		hashlist[i]->next=NULL;
-		hashlist[i]->q_loc=NULL;
-		pthread_mutex_init(&(hashlist[i]->lock), NULL);
+		//pthread_mutex_init(&(hashlist[i]->lock), NULL);
 	}
 }
 
@@ -209,22 +197,15 @@ int hash(int val) {
 void hash_queue_add(hlist_node *hashtable, int val) {
 	// You need to implement hash_queue_add function.
 	queue_node* new_node = (queue_node*)malloc(sizeof(queue_node*));
+	new_node->prev = NULL;
+	new_node->next = NULL;
 	new_node->data = val;
 	enqueue(new_node);
-	hlist_node* new_hlist_node = (hlist_node*)malloc(sizeof(hlist_node*));
 
-	int hs = hash(val);
-	if (hashtable[hs].q_loc == NULL) {
-		hashtable[hs].q_loc = new_node;
-	}
-	else {
-		hlist_node* curr = &hashtable[hs];
-		while (curr->next != NULL) {
-			curr = curr->next;
-		}
-		curr->q_loc = new_node;
-		curr->next = new_hlist_node;
-	}
+	hlist_node* new_pnode = (hlist_node*)malloc(sizeof(hlist_node)); //(1)
+	new_pnode->next = hashtable;
+	new_pnode->q_loc = new_node;
+	hashtable = new_pnode;
 }
 
 /*
@@ -305,12 +286,10 @@ void hash_queue_add_fg(hlist_node *hashtable, int val) {
 int value_exist(int val) {
 	// You need to implement value_exist function.
 	int bucket = hash(val);
-	hlist_node* curr = hashlist[bucket];
-	while (curr->next != NULL) {
-		if (curr->q_loc->data == val) {
+	for(hlist_node* start=hashlist[bucket];start!=NULL;start=start->next){
+		if(start->q_loc->data==val){
 			return 1;
 		}
-		curr = curr->next;
 	}
 	return 0;
 }
@@ -321,7 +300,8 @@ int value_exist(int val) {
  */
 void hash_queue_insert_by_target() {
 	// You need to implement hash_queue_insert_by_target function.
-	hash_queue_add((hlist_node *)hashlist, target);
+	int idx = hash(target);
+	hash_queue_add(hashlist[idx], target);
 }
 
 /*
@@ -349,19 +329,14 @@ void hash_queue_insert_by_target_fg() {
  */
 void hash_queue_delete_by_target() {
 	// You need to implement hash_queue_delete_by_target function.
-	queue_node del_node;
-	del_node.data = target;
-	dequeue(&del_node);
-
-	int bucket = hash(target);
-	hlist_node* curr = hashlist[bucket];
-	while (curr->next != NULL) {
-		curr = curr->next;
-		if (curr->q_loc->data == target) {
-			if(curr->next->next!=NULL){
-				curr->next=curr->next->next;
-			}else{
-				curr->next=NULL;
+	if(value_exist(target)){
+		queue_node* del_node = (queue_node*)malloc(sizeof(queue_node*));
+		dequeue(del_node);
+		
+		int bucket = hash(target);
+		for(hlist_node* start=hashlist[bucket];start!=NULL;start=start->next){
+			if(start->q_loc==del_node){
+				start->next=start->next->next;
 			}
 		}
 	}
@@ -403,6 +378,11 @@ void hash_queue_delete_by_target_cg() {
  */
 void hash_queue_delete_by_target_fg() {
 	// You need to implement hash_queue_delete_by_target_fg function.
+	if(value_exist(target)){
+		queue_node* new_node = (queue_node*)malloc(sizeof(queue_node*));
+		enqueue_fg(new_node);
+	}
+	value_exist(target);
 	queue_node del_node;
 	del_node.data = target;
 	dequeue_fg(&del_node);
