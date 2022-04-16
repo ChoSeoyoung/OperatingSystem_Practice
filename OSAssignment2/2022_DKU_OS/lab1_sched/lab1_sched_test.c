@@ -1,51 +1,57 @@
-/*
-*	DKU Operating System Lab
-*	    Lab1 (Scheduler Algorithm Simulator)
-*	    Student id : 32204298
-*	    Student name : 조서영
-*
-*   lab1_sched.c :
-*       - Lab1 source file.
-*       - Must contains scueduler algorithm test code.
-*
-*/
-
-#include <aio.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <time.h>
-#include <sys/time.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <assert.h>
-#include <pthread.h>
-#include <asm/unistd.h>
-#define SIZE 5
 
-#include "lab1_sched_types.h"
+typedef struct nodetype{
+	int key;
+	struct nodetype *link;
+}node_pointer;
 
-/*
- * you need to implement scheduler simlator test code.
- *
- */
-PROCESS process_list[SIZE]={{0,'A',0,3},{1,'B',2,6},{2,'C',4,4},{3,'D',6,5},{4,'E',8,2}};
-int process_arrive_time[20]={0,-1,1,-1,2,-1,3,-1,4,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-//Queue Q={-1,4,0,arr};
 
-int main(int argc, char *argv[]){
-    FCFS(process_list, SIZE, process_arrive_time);
-    RR(process_list, SIZE, process_arrive_time,1);
-    RR(process_list, SIZE, process_arrive_time,4);
-    SPN(process_list, SIZE, process_arrive_time);
-    HRRN(process_list, SIZE, process_arrive_time);
-    FeedBack(process_list, SIZE, process_arrive_time,1);
-    FeedBack(process_list, SIZE, process_arrive_time,2);
-    //void FeedBack_q1();
-    //void FeedBack_q2();
+void distribute(int* masterlist, int size, int exp, node_pointer *list[]){
+	for(int i=0;i<10;i++){ //더미를 비운다
+		(*list[i]).key=NULL;
+		(*list[i]).link=NULL;
+	}
+	for(int i=0;i<size;i++){
+		//int exp=1;
+		//for(int j=0;j<index;j++){exp*=10;}
+		int idx=masterlist[i]/exp;
+		(*list[idx])=*((*list[idx]).link);
+		(*list[idx]).key=masterlist[i];
+	}
 }
 
+void coalesce(int * masterlist, node_pointer *list[]){
+	int idx=0;
+	for (int i = 0; i < 10; i++){
+		node_pointer tmp = *list[i];
+		while(tmp.link!=NULL){
+			masterlist[idx++]=tmp.key;
+			tmp=*(tmp.link);
+		}
+	}
+}
+
+void radix_sort(int* masterlist, int size) {
+	node_pointer *list[10];
+
+	int maxValue = 0;
+	int exp = 1;
+	for (int i = 0; i < size; i++) {
+		if (list[i] > maxValue) maxValue = list[i];
+	}
+	while (maxValue / exp > 0) { // 1의 자릿수 계산
+		void distribute(masterlist, size, exp, list);
+		void coalesce(masterlist, list);
+	}
+}
+
+
+int main(){
+	int a[10]={9,8,7,6,5,4,3,2,1,10};
+	radix_sort(a,10);
+	for(int i=0;i<10;i++){
+		printf("%d ",a[i]);
+	}
+}

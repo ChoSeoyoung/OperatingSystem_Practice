@@ -31,7 +31,6 @@ void *List_Insert(void *arg){
     myarg_t *m = (myarg_t *)arg;
     list_t *L = m->L;
 
-    pthread_mutex_lock(&L->lock);
     node_t *new = malloc(sizeof(node_t));
     if(new==NULL){
         perror("malloc");
@@ -40,26 +39,28 @@ void *List_Insert(void *arg){
     }
     printf("Thread<%d> insert %d in linked list\n",m->name,m->key);
     new->key=m->key;
+    
+    //just lock critical section
+    pthread_mutex_lock(&L->lock);
     new->next=L->head;
     L->head=new;
     pthread_mutex_unlock(&L->lock);
 }
 
 int List_Lookup(list_t *L, int key){
+    int rv=-1;
     pthread_mutex_lock(&L->lock);
     node_t *curr = L->head;
     while(curr){
         if(curr->key==key){
-            pthread_mutex_unlock(&L->lock);
-            return 0;//success
+            rv=0;
+            break;
         }
         curr=curr->next;
     }
     pthread_mutex_unlock(&L->lock);
-    return -1;//failure
+    return rv;
 }
-
-//https://rond-o.tistory.com/270
 
 int main(){
     list_t l;
